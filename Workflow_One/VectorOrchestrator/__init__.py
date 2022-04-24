@@ -12,6 +12,8 @@ import json
 import azure.functions as func
 import azure.durable_functions as df
 
+from itertools import chain
+
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     params = context.get_input()
@@ -19,12 +21,27 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     instances = params["instances"]
     tasks = []
 
-    for i in range(instances):
+    vec_one = params["vector_one"]
+    vec_two = params["vector_two"]
+
+    step = len(vec_one) // instances
+
+    for i in range(instances-1):
         # Create the parallel function calls that will then be run
-        tasks.append(context.call_activity('MultAndAdd', str((params["vector_one"], params["vector_two"]))))
+        tasks.append(context.call_activity('MultAndAdd', f'{vec_one[:step]};{vec_two[:step]}'))
+        
+        # Remove the data we just passed out to a worker
+        vec_one = vec_one[step:]
+        vec_two = vec_two[step:]
+
+    # Pass extra elements to the final worker
+    tasks.append(context.call_activity('MultAndAdd', f'{vec_one};{vec_two}'))
 
     # Execute all the functions
     results = yield context.task_all(tasks)
+    
+    # Combine the results back into a flat list
+    results = list(chain.from_iterable(results))
 
     return results
 
