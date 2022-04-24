@@ -27,9 +27,9 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     vec_one = params["vector_one"]
     vec_two = params["vector_two"]
 
-    mult_step = 2*len(vec_one) // mult_instances
     # Since instances are split between the two arrays, an odd number of instances will be rounded down.
     loops = mult_instances // 2
+    mult_step = len(vec_one) // loops
 
     for i in range(loops-1):
         # Create the parallel function calls that will then be run
@@ -45,27 +45,27 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     tasks_second.append(context.call_activity('VectorMult', {"vector": vec_two[:mult_step],"operand": 85412}))
 
     vec_one = yield context.task_all(tasks)
-    vec_one = list(chain.from_iterable(vec_one))    
+    vec_one = list(chain.from_iterable(vec_one))
 
     vec_two = yield context.task_all(tasks_second)
     vec_two = list(chain.from_iterable(vec_two))
 
-    # # Now perform the addition step
-    # tasks = []
-    # vec_one = params["vector_one"] #TODO update to take output from mult step
-    # vec_two = params["vector_two"]
-    # step = len(vec_one) // instances
+    logging.info(f"After multiplication is {vec_one} and {vec_two}")
 
-    # for i in range(instances-1):
-    #     # Create the parallel function calls that will then be run
-    #     tasks.append(context.call_activity('AddVectors', f'{vec_one[:step]};{vec_two[:step]}'))
+    # Now perform the addition step
+    tasks = []
+    step = len(vec_one) // add_instances
+
+    for i in range(add_instances-1):
+        # Create the parallel function calls that will then be run
+        tasks.append(context.call_activity('VectorAdd', {"vector_one": vec_one[:step],"vector_two": vec_two[:step]}))
         
-    #     # Remove the data we just passed out to a worker
-    #     vec_one = vec_one[step:]
-    #     vec_two = vec_two[step:]
+        # Remove the data we just passed out to a worker
+        vec_one = vec_one[step:]
+        vec_two = vec_two[step:]
 
-    # # Pass extra elements to the final worker
-    # tasks.append(context.call_activity('MultAndAdd', f'{vec_one};{vec_two}'))
+    # Pass extra elements to the final worker
+    tasks.append(context.call_activity('VectorAdd', {"vector_one": vec_one[:step],"vector_two": vec_two[:step]}))
 
     # Execute all the functions
     results = yield context.task_all(tasks)
