@@ -22,32 +22,19 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
 
     vec_one = params["vector_one"]
     vec_two = params["vector_two"]
-    
     half = len(vec_one) // 2
-    half_vectors = {"instances": instances//2, "vector_one": vec_one[:half], "vector_two": vec_two[:half]}
-
-    orch_task = context.call_sub_orchestrator("SplitVectorOrchestrator", half_vectors)
-
-    yield context.task_all(orch_task)
-    # step = len(vec_one) // instances
-
-    # for i in range(instances-1):
-    #     # Create the parallel function calls that will then be run
-    #     tasks.append(context.call_activity('MultAndAdd', f'{vec_one[:step]};{vec_two[:step]}'))
-        
-    #     # Remove the data we just passed out to a worker
-    #     vec_one = vec_one[step:]
-    #     vec_two = vec_two[step:]
-
-    # # Pass extra elements to the final worker
-    # tasks.append(context.call_activity('MultAndAdd', f'{vec_one};{vec_two}'))
-
-    # # Execute all the functions
-    # results = yield context.task_all(tasks)
+    halfinst = instances // 2
     
-    # # Combine the results back into a flat list
-    # results = list(chain.from_iterable(results))
+    half_vectors = {"instances": halfinst, "vector_one": vec_one[:half], "vector_two": vec_two[:half]}
+    first_half = context.call_sub_orchestrator("SplitVectorOrchestrator", half_vectors)
 
-    # return results
+    half_vectors = {"instances": (instances - halfinst), "vector_one": vec_one[half:], "vector_two": vec_two[half:]}
+    second_half = context.call_sub_orchestrator("SplitVectorOrchestrator", half_vectors)
+
+    orch_tasks = [first_half, second_half]
+    results = yield context.task_all(orch_tasks)
+    results = list(chain.from_iterable(results))
+
+    return results
 
 main = df.Orchestrator.create(orchestrator_function)
