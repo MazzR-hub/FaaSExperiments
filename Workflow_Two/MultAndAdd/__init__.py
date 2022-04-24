@@ -23,6 +23,8 @@ def main(vectors: str) -> List[int]:
     result = []
     
     for i in range(len(vectors[0])):
-        result.append(vectors[0][i] + vectors[1][i])
+        mult_one = vectors[0][i] * 351154
+        mult_two = vectors[1][i] * 85412
+        result.append(mult_one + mult_two)
 
     return result
