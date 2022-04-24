@@ -15,18 +15,17 @@ import azure.durable_functions as df
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     params = context.get_input()
-    logging.info(f"Read in is: {type(vectors)}")
 
     instances = params["instances"]
-    results = []
+    tasks = []
 
     for i in range(instances):
-        result = yield context.call_activity('MultAndAdd', params["vector_one"], params["vector_two"])
-        results.extend(result)
+        # Create the parallel function calls that will then be run
+        tasks.append(context.call_activity('MultAndAdd', str((params["vector_one"], params["vector_two"]))))
 
-        # result2 = yield context.call_activity('MultAndAdd', "Seattle")
-        # result3 = yield context.call_activity('MultAndAdd', "London")
+    # Execute all the functions
+    results = yield context.task_all(tasks)
 
-    return [result1, result2, result3]
+    return results
 
 main = df.Orchestrator.create(orchestrator_function)

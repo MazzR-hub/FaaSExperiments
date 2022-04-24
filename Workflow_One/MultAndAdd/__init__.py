@@ -9,5 +9,5 @@
 import logging
 
 
-def main(vec_one: list, vec_two: list) -> str:
-    return f"Hello {vec_one} and {vec_two}!"
+def main(vectors: str) -> str:
+    return f"Hello {vectors}!"
