@@ -11,18 +11,14 @@ from typing import List
 
 def main(vectors: str) -> List[int]:
     # Convert the string parameter back into the list of integers easiest for manipulation.
-    vectors = vectors.replace(' ','')
-    vectors = vectors.split(';')
-    vectors[0] = vectors[0][1:-1].split(',')
-    vectors[0] = list(map(int, vectors[0]))
-    vectors[1] = vectors[1][1:-1].split(',')
-    vectors[1] = list(map(int, vectors[1]))
+    vec_one = vectors['vector_one']
+    vec_two = vectors['vector_two']
 
     result = []
     
-    for i in range(len(vectors[0])):
-        mult_one = vectors[0][i] * 351154
-        mult_two = vectors[1][i] * 85412
+    for i in range(len(vec_one)):
+        mult_one = vec_one[i] * 351154
+        mult_two = vec_two[i] * 85412
         result.append(mult_one + mult_two)
 
     return result
