@@ -14,15 +14,17 @@ import azure.functions as func
 def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
     # Function to determine whether to add the Sender to a list to be checked for fraud in their account.
     newRecord = {}
+    amount = float(transaction['amount'])
+
     newRecord['accountName'] = transaction['nameOrig']
-    newRecord['amount'] = transaction['amount']
+    newRecord['amount'] = amount
     newRecord['type'] = transaction['type']
     newRecord['date'] = datetime.datetime.today()
 
-    if transaction['amount'] >= transaction['oldBalanceOrg']:
+    if amount >= transaction['oldBalanceOrg']:
         newRecord['warning'] = "Balance too high for account"
         newRecord['priority'] = "High"
-    elif transaction['amount'] > 0.1 * transaction['oldBalanceOrg']:
+    elif amount > 0.1 * transaction['oldBalanceOrg']:
         newRecord['warning'] = "Over 10% of balance removed"
         newRecord['priority'] = "Medium"
     else:

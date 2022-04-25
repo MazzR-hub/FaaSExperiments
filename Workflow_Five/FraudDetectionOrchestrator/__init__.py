@@ -16,15 +16,20 @@ import azure.durable_functions as df
 def orchestrator_function(context: df.DurableOrchestrationContext):
     input = context.get_input()
     instances = input['instances']
-    transactions = input['records']
+    transactions = input['transactions']
 
     tasks = []
+    j=0
 
-    for i in range(len(transactions),__step=instances):
+    for i in range(len(transactions)):
         tasks.append(context.call_sub_orchestrator("TransactionProcessOrchestrator", transactions[i]))
-        yield context.task_all(tasks)
-        tasks = []
-        
+        j += 1
+
+        if j >= i:
+            yield context.task_all(tasks)
+            tasks = []
+            j=0
+
     return []
 
 main = df.Orchestrator.create(orchestrator_function)

@@ -17,10 +17,9 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     transaction = context.get_input()
     checks = []
 
-    if transaction["amount"] > 10000:
+    if float(transaction["amount"]) > 10000:
         if transaction['type'] == "CASH_OUT":
             checks.append(context.call_activity("CompareForSender", transaction))
-
         else:
             checks.append(context.call_activity("CompareForSender", transaction))
             checks.append(context.call_activity("WarnForReceiver", transaction))

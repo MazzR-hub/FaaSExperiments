@@ -10,7 +10,7 @@
       "name": "flagSender",
       "type": "queue",
       "direction": "out",
-      "queueName": "outqueue",
+      "queueName": "FraudInvestigations",
       "connection": "AzureWebJobsStorage"
     }
   ]

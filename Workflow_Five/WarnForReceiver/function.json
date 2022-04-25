@@ -10,7 +10,7 @@
     "name": "flagReceiver",
     "type": "queue",
     "direction": "out",
-    "queueName": "outqueue",
+    "queueName": "accountsToCheck",
     "connection": "AzureWebJobsStorage"
     }
   ]

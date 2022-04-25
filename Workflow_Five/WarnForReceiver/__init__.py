@@ -14,12 +14,13 @@ import azure.functions as func
 def main(transaction: str, flagReceiver: func.Out[func.QueueMessage]) -> str:
     # Function to write out for a queue to investigate recipients of suspicious payments.
     newRecord = {}
+    amount = float(transaction['amount'])
     newRecord['accountName'] = transaction['nameDest']
-    newRecord['amount'] = transaction['amount']
+    newRecord['amount'] = amount
     newRecord['type'] = transaction['type']
     newRecord['date'] = datetime.datetime.today()
 
-    if transaction['amount'] >= 0.5 * transaction['oldBalanceDest']:
+    if amount >= 0.5 * transaction['oldBalanceDest']:
         newRecord['warning'] = "Recipient gained more than 50% of their original balance"
         flagReceiver.set(newRecord)
         return "Added message"
