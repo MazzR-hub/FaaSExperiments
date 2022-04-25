@@ -15,10 +15,15 @@ import azure.durable_functions as df
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     transaction = context.get_input()
+    checks = []
 
     if transaction["amount"] > 10000:
-        yield context.call_activity("CompareForSender", transaction)
-        yield context.call_activity("CompareForReceiver", transaction)
+        if transaction['type'] == "CASH_OUT":
+            checks.append(context.call_activity("CompareForSender", transaction))
+
+        else:
+            checks.append(context.call_activity("CompareForSender", transaction))
+            checks.append(context.call_activity("WarnForReceiver", transaction))
     else:
         transaction["isFraud"] = 0
     return []

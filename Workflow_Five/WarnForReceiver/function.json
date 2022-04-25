@@ -7,11 +7,11 @@
       "direction": "in"
     },
     {
-      "name": "flagSender",
-      "type": "queue",
-      "direction": "out",
-      "queueName": "outqueue",
-      "connection": "AzureWebJobsStorage"
+    "name": "flagReceiver",
+    "type": "queue",
+    "direction": "out",
+    "queueName": "outqueue",
+    "connection": "AzureWebJobsStorage"
     }
   ]
 }
