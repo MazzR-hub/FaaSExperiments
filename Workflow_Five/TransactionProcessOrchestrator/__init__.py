@@ -16,11 +16,32 @@ import azure.durable_functions as df
 def orchestrator_function(context: df.DurableOrchestrationContext):
     data = context.get_input()
     transactions = data["transactions"]
+    instances = data["instances"]
     checks = []
     logging.info(f"Whole data: {transactions}")
+    loops_required = len(transactions) // instances
+    remainder = len(transactions) % instances
 
-    for transaction in transactions:
-        logging.info(f"Gave us {transaction}")
+    for i in range(loops_required):
+        for j in range(instances):
+            index = i * instances + j
+            transaction = transactions[index]
+            logging.info(f"Gave us {transaction}")
+            if float(transaction["amount"]) > 10000:
+                logging.info("Found transaction")
+                if transaction['type'] == "CASH_OUT":
+                    checks.append(context.call_activity("CompareForSender", transaction))
+                else:
+                    checks.append(context.call_activity("CompareForSender", transaction))
+                    checks.append(context.call_activity("WarnForReceiver", transaction))
+            else:
+                logging.info(f"Did not meet criteria. Amount {transaction['amount']}")
+        yield context.task_all(checks)
+        checks = []
+
+    for j in range(remainder):
+        index = loops_required * instances + j
+        transaction = transactions[index]
         if float(transaction["amount"]) > 10000:
             logging.info("Found transaction")
             if transaction['type'] == "CASH_OUT":
@@ -28,9 +49,11 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
             else:
                 checks.append(context.call_activity("CompareForSender", transaction))
                 checks.append(context.call_activity("WarnForReceiver", transaction))
-            yield context.task_all(checks)
         else:
             logging.info(f"Did not meet criteria. Amount {transaction['amount']}")
-        return []
+
+    yield context.task_all(checks)
+
+    return []
 
 main = df.Orchestrator.create(orchestrator_function)
