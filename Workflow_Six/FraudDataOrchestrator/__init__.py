@@ -15,8 +15,9 @@ import azure.durable_functions as df
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     input = context.get_input()
-    instances = input['instances']
+    instances = input['top_instances']
     transactions = input['transactions']
+    sub_instances = input['sub_instances']
 
     to_process = []
 
@@ -24,7 +25,6 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         if float(transaction['amount']) > 10000:
             to_process.append(transaction)
 
-    logging.info(f"Finally {to_process}")
     tasks = []
 
     number_per_instance = len(to_process) // instances
@@ -33,11 +33,11 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         number_per_instance = 1
 
     for i in range(instances - 1):
-        sub_transactions = {"transactions": to_process[:number_per_instance]}
+        sub_transactions = {"instances": sub_instances, "transactions": to_process[:number_per_instance]}
         tasks.append(context.call_sub_orchestrator("HighAmountOrchestrator", sub_transactions))
         transactions = to_process[number_per_instance:]
 
-    sub_transactions = {"transactions": to_process[:number_per_instance]}
+    sub_transactions = {"instances": sub_instances, "transactions": to_process}
     tasks.append(context.call_sub_orchestrator("HighAmountOrchestrator", sub_transactions))
     
     yield context.task_all(tasks)

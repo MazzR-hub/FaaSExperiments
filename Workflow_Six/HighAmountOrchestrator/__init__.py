@@ -15,16 +15,28 @@ import azure.durable_functions as df
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     data = context.get_input()
-    logging.info(f"Data provided was {data}")
     transactions = data["transactions"]
     senders = []
+    instances = data['instances']
     logging.info(f"I received this {transactions}")
 
-    for transaction in transactions:
-        result = yield context.call_activity("CompareForSender", transaction)
-        if result == "Fraud":
-            yield context.call_activity("WarnForReceiver", transaction)
+    loops_required = len(transactions) // instances
+    remainder = len(transactions) % instances
 
+    tasks = []
+
+    for i in range(loops_required):
+        for j in range(instances):
+            index = i * instances + j
+            transaction = transactions[index]
+            tasks.append(context.call_activity("CompareForSender", transaction))
+        yield context.task_all(tasks)
+        tasks = []
+
+    for j in range(remainder):
+        index = loops_required * instances + j
+        transaction = transactions[index]
+        tasks.append(context.call_activity("CompareForSender", transaction))
     return []
 
 main = df.Orchestrator.create(orchestrator_function)

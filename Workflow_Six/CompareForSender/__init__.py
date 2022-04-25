@@ -11,7 +11,7 @@ import datetime
 import azure.functions as func
 
 
-def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
+def main(transaction: str, flagSender: func.Out[func.QueueMessage], flagReceiver: func.Out[func.QueueMessage]) -> str:
     # Function to determine whether to add the Sender to a list to be checked for fraud in their account.
     logging.info("I'VE GOT HERE")
     newRecord = {}
@@ -34,4 +34,11 @@ def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
         return "No Fraud"
     logging.info(f"I have written out to queue {newRecord}")
     flagSender.set(str(newRecord))
+
+    if transaction['type'] != "CASH_OUT":
+        nextRecord = newRecord
+        nextRecord['accountName'] = transaction['nameDest']
+        if amount > 0.1 * float(transaction['oldbalanceOrg']) and amount >= 0.5 * float(transaction['oldbalanceDest']):
+            nextRecord['warning'] = "Recipient gained more than 50% of their original balance"
+            flagReceiver.set(str(nextRecord))
     return "Fraud"
