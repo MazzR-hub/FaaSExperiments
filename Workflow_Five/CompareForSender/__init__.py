@@ -21,13 +21,15 @@ def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
     newRecord['type'] = transaction['type']
     newRecord['date'] = datetime.datetime.today()
 
-    if amount >= transaction['oldBalanceOrg']:
+    if amount >= float(transaction['oldbalanceOrg']):
         newRecord['warning'] = "Balance too high for account"
         newRecord['priority'] = "High"
-    elif amount > 0.1 * transaction['oldBalanceOrg']:
+    elif amount > 0.1 * float(transaction['oldbalanceOrg']):
         newRecord['warning'] = "Over 10% of balance removed"
         newRecord['priority'] = "Medium"
     else:
+        logging.info(f"Left. Amount was {amount}")
         return "No log"
     flagSender.set(newRecord)
+    logging.info(f"Should be writing: {newRecord}")
     return "Added message"

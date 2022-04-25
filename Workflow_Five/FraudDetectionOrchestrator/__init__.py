@@ -19,16 +19,17 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     transactions = input['transactions']
 
     tasks = []
-    j=0
+    number_per_instance = len(transactions) // instances
 
-    for i in range(len(transactions)):
-        tasks.append(context.call_sub_orchestrator("TransactionProcessOrchestrator", transactions[i]))
-        j += 1
+    for i in range(instances - 1):
+        sub_transactions = {"transactions": transactions[:number_per_instance]}
+        tasks.append(context.call_sub_orchestrator("TransactionProcessOrchestrator", sub_transactions))
+        transactions = transactions[number_per_instance:]
 
-        if j >= i:
-            yield context.task_all(tasks)
-            tasks = []
-            j=0
+    sub_transactions = {"transactions": transactions[:number_per_instance]}
+    tasks.append(context.call_sub_orchestrator("TransactionProcessOrchestrator", sub_transactions))
+    
+    yield context.task_all(tasks)
 
     return []
 

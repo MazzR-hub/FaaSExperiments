@@ -14,17 +14,24 @@ import azure.durable_functions as df
 
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
-    transaction = context.get_input()
+    data = context.get_input()
+    transactions = data["transactions"]
     checks = []
+    logging.info(f"Whole data: {transactions}")
 
-    if float(transaction["amount"]) > 10000:
-        if transaction['type'] == "CASH_OUT":
-            checks.append(context.call_activity("CompareForSender", transaction))
+    for transaction in transactions:
+        logging.info(f"Gave us {transaction}")
+        if float(transaction["amount"]) > 10000:
+            logging.info("Found transaction")
+            if transaction['type'] == "CASH_OUT":
+                checks.append(context.call_activity("CompareForSender", transaction))
+            else:
+                checks.append(context.call_activity("CompareForSender", transaction))
+                checks.append(context.call_activity("WarnForReceiver", transaction))
+            yield context.task_all(checks)
         else:
-            checks.append(context.call_activity("CompareForSender", transaction))
-            checks.append(context.call_activity("WarnForReceiver", transaction))
-    else:
-        transaction["isFraud"] = 0
-    return []
+            logging.info(f"Did not meet. Amount {transaction['amount']}")
+            transaction["isFraud"] = 0
+        return []
 
 main = df.Orchestrator.create(orchestrator_function)
