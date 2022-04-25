@@ -10,25 +10,21 @@ import logging
 import datetime
 import azure.functions as func
 
-
-def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
-    # Function to determine whether to add the Sender to a list to be checked for fraud in their account.
+def main(transaction: str, flagReceiver: func.Out[func.QueueMessage]) -> str:
+    # Function to write out for a queue to investigate recipients of suspicious payments.
     newRecord = {}
     amount = float(transaction['amount'])
-
-    newRecord['accountName'] = transaction['nameOrig']
+    newRecord['accountName'] = transaction['nameDest']
     newRecord['amount'] = amount
     newRecord['type'] = transaction['type']
     today = datetime.date.today()
     newRecord['date'] = today.strftime("%d/%m/%Y")
 
-    if amount >= float(transaction['oldbalanceOrg']):
-        newRecord['warning'] = "Balance too high for account"
-        newRecord['priority'] = "High"
-    elif amount > 0.1 * float(transaction['oldbalanceOrg']):
-        newRecord['warning'] = "Over 10% of balance removed"
-        newRecord['priority'] = "Medium"
+    if amount > 0.1 * float(transaction['oldbalanceOrg']):
+        newRecord['warning'] = "Recipient gained more than 50% of their original balance"
+        flagReceiver.set(str(newRecord))
+        logging.info(f"Should be writing: {newRecord}")
+        return "Added message"
     else:
+        logging.info(f"Left. Amount was {amount}")
         return "No log"
-    flagSender.set(str(newRecord))
-    return "Added message"

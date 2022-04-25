@@ -13,6 +13,7 @@ import azure.functions as func
 
 def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
     # Function to determine whether to add the Sender to a list to be checked for fraud in their account.
+    logging.info("I'VE GOT HERE")
     newRecord = {}
     amount = float(transaction['amount'])
 
@@ -29,6 +30,8 @@ def main(transaction: str, flagSender: func.Out[func.QueueMessage]) -> str:
         newRecord['warning'] = "Over 10% of balance removed"
         newRecord['priority'] = "Medium"
     else:
-        return "No log"
+        logging.info(f"I have not written out to queue {newRecord}")
+        return "No Fraud"
+    logging.info(f"I have written out to queue {newRecord}")
     flagSender.set(str(newRecord))
-    return "Added message"
+    return "Fraud"

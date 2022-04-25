@@ -18,11 +18,12 @@ def main(transaction: str, flagReceiver: func.Out[func.QueueMessage]) -> str:
     newRecord['accountName'] = transaction['nameDest']
     newRecord['amount'] = amount
     newRecord['type'] = transaction['type']
-    newRecord['date'] = datetime.datetime.today()
+    today = datetime.date.today()
+    newRecord['date'] = today.strftime("%d/%m/%Y")
 
-    if amount >= 0.5 * float(transaction['oldbalanceDest']):
+    if amount > 0.1 * float(transaction['oldbalanceOrg']) and amount >= 0.5 * float(transaction['oldbalanceDest']):
         newRecord['warning'] = "Recipient gained more than 50% of their original balance"
-        flagReceiver.set(newRecord)
+        flagReceiver.set(str(newRecord))
         logging.info(f"Should be writing: {newRecord}")
         return "Added message"
     else:
