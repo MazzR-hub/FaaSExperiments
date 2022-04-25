@@ -1,0 +1,18 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "name",
+      "type": "activityTrigger",
+      "direction": "in"
+    }, 
+    {
+      "name": "input",
+      "type": "blob",
+      "dataType": "string",
+      "path": "payment-data-container/Fraud_Detection_Dataset.csv",
+      "connection": "MyStorageConnectionAppSetting",
+      "direction": "in"
+    }
+  ]
+}
