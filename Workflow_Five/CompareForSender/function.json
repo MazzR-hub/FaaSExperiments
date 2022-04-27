@@ -1,0 +1,17 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "transaction",
+      "type": "activityTrigger",
+      "direction": "in"
+    },
+    {
+      "name": "flagSender",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "FraudInvestigations",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
